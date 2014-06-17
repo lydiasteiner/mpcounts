@@ -6,8 +6,8 @@ package mpcounts;
 
 import java.util.TreeMap;
 
-import mpcounts.mp.BottomUp;
-import mpcounts.mp.TopDown;
+import mpcounts.mp.classic.BottomUp;
+import mpcounts.mp.classic.TopDown;
 
 /**
  * @author lydia

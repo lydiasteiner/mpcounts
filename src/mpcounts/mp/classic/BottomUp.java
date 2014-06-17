@@ -1,4 +1,4 @@
-package mpcounts.mp;
+package mpcounts.mp.classic;
 
 
 import java.io.BufferedReader;
@@ -48,7 +48,7 @@ public class BottomUp {
 	
 	public void calcScores(){
 		// get real counts with score 0 for leaves
-		if(children.size() == 0){
+		if(this.children.size() == 0){
 			readCounts();
 			return;
 		}
@@ -65,7 +65,7 @@ public class BottomUp {
 
 	private Integer minScore(String dclass, Integer i) {
 		Integer minScore = 0;
-		for(BottomUp child : children){
+		for(BottomUp child : this.children){
 			Integer minScoreC = -1;
 			TreeMap<Integer,Integer>  childscore = child.getScores().get(dclass); //score for this domain and child
 			for(Integer count: childscore.keySet()){

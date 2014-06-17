@@ -1,4 +1,4 @@
-package mpcounts.mp;
+package mpcounts.mp.classic;
 
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
