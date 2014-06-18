@@ -17,6 +17,9 @@ public class PenaltyCalculator {
 	private ArrayList<PenaltyCalculator> children;
 	private static List<String> dclasses = Arrays.asList("Wac", "Wme", "Wph",
 			"Wub", "Eac", "Eme", "Eub", "Rac", "Rme", "Rph");
+	//performance helper
+	private TreeMap<String, Integer> lastMin;
+	private Integer curUpperBound; 
 
 	/**
 	 * @param dir
@@ -26,7 +29,8 @@ public class PenaltyCalculator {
 		this.children = new ArrayList<PenaltyCalculator>();
 		this.penaltyClass = new TreeMap<String, TreeMap<Integer, Integer>>();
 		this.penaltyTotal = new TreeMap<Integer, Integer>();
-
+		this.lastMin =  new TreeMap<String, Integer>();
+		this.curUpperBound = -1;
 		// read directory and create BottomUp object for each directory
 		File directory = new File(this.dir);
 		File[] files = directory.listFiles();
@@ -46,7 +50,7 @@ public class PenaltyCalculator {
 	}
 
 	public void calcPenaltyClass() {
-		System.err.println(this.dir);
+		System.err.println(this.dir.substring(this.dir.lastIndexOf("/")));
 		// get real counts with score 0 for leaves
 		if (this.children.size() == 0) {
 			readCounts();
@@ -55,10 +59,11 @@ public class PenaltyCalculator {
 
 		// maximal counts of children nodes
 		Integer max = getMax();
+		System.err.println("max "+max);
 		for (String dclass : PenaltyCalculator.getDclasses()) {
 			this.penaltyClass.put(dclass, new TreeMap<Integer, Integer>());
 			for (Integer i = 0; i <= max; i++) {
-				if(i%1000 == 0)System.err.println(i);
+				//if(i%1000 == 0)System.err.println(i);
 				this.penaltyClass.get(dclass).put(new Integer(i),
 						minPenalty(dclass, i));
 			}
@@ -70,7 +75,7 @@ public class PenaltyCalculator {
 	private void calcPenaltyTotal() {
 		Integer max = getMax();
 		for (Integer i = 0; i <= max; i++) {
-			if(i%1000 == 0)System.err.println(i+ "\t" + max);
+			//if(i%1000 == 0)System.err.println(i+ "\t" + max);
 			// penalty for difference in counts
 			Integer pen1 = 0;
 			for (PenaltyCalculator child : children) {
@@ -86,7 +91,8 @@ public class PenaltyCalculator {
 			// min penalty for score change satisfying the current count
 			Integer pen2 = 0;
 			for (String dclass : PenaltyCalculator.getDclasses()) {
-				pen2 += minPenaltyConstrainted(dclass, i);
+				Integer res = minPenaltyConstrainted(dclass, i);
+				pen2 += res;
 			}
 			// sum up for total penalty
 			penaltyTotal.put(i, pen1 + pen2);
@@ -94,23 +100,40 @@ public class PenaltyCalculator {
 	}
 
 	private Integer minPenaltyConstrainted(String dclass, Integer upperBound) {
-		Integer minPen = Integer.MAX_VALUE;
-		for (Integer i = 0; i <= upperBound; i++) {
-			if (penaltyClass.get(dclass).get(i) < minPen)
-				minPen = penaltyClass.get(dclass).get(i);
+		if(this.curUpperBound > upperBound){
+			this.curUpperBound = -1;
+			this.lastMin.clear();
 		}
-		return minPen;
+		//ensure that all min are calculated
+		//System.err.println(upperBound+"\t"+curUpperBound);
+		while(this.curUpperBound < upperBound){
+			//System.err.println("blub");
+			this.curUpperBound++;
+			for(String dc : PenaltyCalculator.getDclasses()){
+				if(!this.lastMin.containsKey(dc)|| penaltyClass.get(dc).get(curUpperBound) < this.lastMin.get(dc)){
+					lastMin.put(dc,penaltyClass.get(dc).get(curUpperBound));
+				}
+			}
+		}
+		//System.err.println(dclass+"\t"+upperBound+"\t"+this.curUpperBound);
+		return lastMin.get(dclass);
 	}
 
 	public Integer minPenalityCountConstrainted(String dclass, Integer upperBound) {
-		Integer minPen = Integer.MAX_VALUE;
-		Integer minCount = 0;
-		for (Integer i = 0; i <= upperBound; i++) {
-			if (penaltyClass.get(dclass).get(i) < minPen)
-				minPen = penaltyClass.get(dclass).get(i);
-				minCount = i;
+		if(this.curUpperBound > upperBound){
+			this.curUpperBound = -1;
+			this.lastMin.clear();
 		}
-		return minCount;
+		//ensure that all min are calculated
+		while(this.curUpperBound < upperBound){
+			this.curUpperBound++;
+			for(String dc : PenaltyCalculator.getDclasses()){
+				if(!this.lastMin.containsKey(dc) || penaltyClass.get(dc).get(this.curUpperBound) < penaltyClass.get(dc).get(this.lastMin.get(dc))){
+					lastMin.put(dc,curUpperBound);
+				}
+			}
+		}
+		return lastMin.get(dclass);
 	}
 	private Integer getMax() {
 		Integer max = -1;
@@ -138,7 +161,7 @@ public class PenaltyCalculator {
 	}
 
 	private void readCounts() {
-		System.err.println("leave found at "+dir);
+		//System.err.println("leave found at "+dir);
 		try {
 			BufferedReader r = new BufferedReader(new FileReader(dir
 					+ "/mpcounts"));
@@ -175,7 +198,7 @@ public class PenaltyCalculator {
 							+ dir);
 			System.exit(0);
 		}
-		System.err.println("counts read");
+		//System.err.println("counts read");
 	}
 
 	/**
@@ -190,7 +213,7 @@ public class PenaltyCalculator {
 	 */
 	public TreeMap<String, TreeMap<Integer, Integer>> getPenaltyClass() {
 		if (penaltyClass.size() == 0){
-			System.err.println("call peanltiy calc for "+dir);
+			//System.err.println("call peanltiy calc for "+dir);
 			calcPenaltyClass();
 		}
 		return penaltyClass;
@@ -201,7 +224,7 @@ public class PenaltyCalculator {
 	 */
 	public TreeMap<Integer, Integer> getPenaltyTotal() {
 		if (penaltyClass.size() == 0){
-			System.err.println("call peanltiy calc for "+dir);
+			//System.err.println("call peanltiy calc for "+dir);
 			calcPenaltyClass();
 		}
 		return penaltyTotal;
