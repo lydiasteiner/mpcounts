@@ -20,7 +20,7 @@ public class PenaltyCalculator {
 	//performance helper
 	private TreeMap<String, Integer> lastMin;
 	private Integer curUpperBound; 
-
+	private TreeMap<String,Integer> maxcounts;
 	/**
 	 * @param dir
 	 */
@@ -49,7 +49,8 @@ public class PenaltyCalculator {
 
 	}
 
-	public void calcPenaltyClass() {
+	public void calcPenaltyClass(TreeMap<String,Integer> max) {
+		this.maxcounts = max;
 		System.err.println(this.dir.substring(this.dir.lastIndexOf("/")));
 		// get real counts with score 0 for leaves
 		if (this.children.size() == 0) {
@@ -58,11 +59,10 @@ public class PenaltyCalculator {
 		}
 
 		// maximal counts of children nodes
-		Integer max = getMax();
 		System.err.println("max "+max);
 		for (String dclass : PenaltyCalculator.getDclasses()) {
 			this.penaltyClass.put(dclass, new TreeMap<Integer, Integer>());
-			for (Integer i = 0; i <= max; i++) {
+			for (Integer i = 0; i <= max.get(dclass); i++) {
 				//if(i%1000 == 0)System.err.println(i);
 				this.penaltyClass.get(dclass).put(new Integer(i),
 						minPenalty(dclass, i));
@@ -73,7 +73,7 @@ public class PenaltyCalculator {
 	}
 
 	private void calcPenaltyTotal() {
-		Integer max = getMax();
+		Integer max = getMaxTotal();
 		for (Integer i = 0; i <= max; i++) {
 			//if(i%1000 == 0)System.err.println(i+ "\t" + max);
 			// penalty for difference in counts
@@ -97,6 +97,15 @@ public class PenaltyCalculator {
 			// sum up for total penalty
 			penaltyTotal.put(i, pen1 + pen2);
 		}
+	}
+
+	private Integer getMaxTotal() {
+		Integer max = -1;
+		for(PenaltyCalculator child : children){
+			Integer curmax = child.getPenaltyTotal().lastKey();
+			if(curmax > max)max= curmax;
+		}
+		return max;
 	}
 
 	private Integer minPenaltyConstrainted(String dclass, Integer upperBound) {
@@ -135,11 +144,19 @@ public class PenaltyCalculator {
 		}
 		return lastMin.get(dclass);
 	}
-	private Integer getMax() {
-		Integer max = -1;
-		for (PenaltyCalculator child : this.children) {
-			if (max < 0 || max < child.getPenaltyTotal().lastKey())
-				max = child.getPenaltyTotal().lastKey();
+	public TreeMap<String, Integer> getMax() {
+		TreeMap<String, Integer> max = new TreeMap<String,Integer>();
+		for(String dclass : PenaltyCalculator.getDclasses()){
+			Integer maxclass = -1;
+			for(PenaltyCalculator child : children){
+				if(child.getMax().get(dclass) > maxclass){
+					maxclass = child.getMax().get(dclass);
+				}
+			}
+			if(maxclass == -1){//im a leave!!!
+				maxclass = this.getPenaltyClass().get(dclass).lastKey();
+			}
+			max.put(dclass, maxclass);
 		}
 		return max;
 	}
@@ -214,7 +231,7 @@ public class PenaltyCalculator {
 	public TreeMap<String, TreeMap<Integer, Integer>> getPenaltyClass() {
 		if (penaltyClass.size() == 0){
 			//System.err.println("call peanltiy calc for "+dir);
-			calcPenaltyClass();
+			calcPenaltyClass(maxcounts);
 		}
 		return penaltyClass;
 	}
@@ -225,7 +242,7 @@ public class PenaltyCalculator {
 	public TreeMap<Integer, Integer> getPenaltyTotal() {
 		if (penaltyClass.size() == 0){
 			//System.err.println("call peanltiy calc for "+dir);
-			calcPenaltyClass();
+			calcPenaltyClass(maxcounts);
 		}
 		return penaltyTotal;
 	}

@@ -21,7 +21,7 @@ public class MPCounts {
 	 * @param args
 	 */
 	public static void main(String[] args) {
-		if(args.length != 2 || (args.length == 2 && !args[0].equals("-n"))){
+		if(args.length > 2 || (args.length == 2 && !args[0].equals("-n"))){
 			System.err.println("USAGE: java -jar mpcounts.jar -n <directory of tree root>");
 			System.exit(0);
 		}
@@ -60,7 +60,8 @@ public class MPCounts {
 		}else{
 			System.out.print("Starting calculations of the penalties (bottom up step)...");
 			PenaltyCalculator root = new PenaltyCalculator(fileroot);
-			root.calcPenaltyClass();
+			TreeMap<String,Integer> max = root.getMax();
+			root.calcPenaltyClass(max);
 			System.out.println("done");
 			System.out.print("Selecting best counts (top down step)...");
 			CountSelector cs = new CountSelector(root);
