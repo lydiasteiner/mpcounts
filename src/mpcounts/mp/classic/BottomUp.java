@@ -76,12 +76,13 @@ public class BottomUp {
 	}
 	
 	public void calcScores(){
-		System.err.println("dir "+dir);
+		System.err.println("starting dir "+dir);
 		//for(String dc : this.getDclasses())System.err.print(dc+"|");
 		//System.err.println("");
 		// get real counts with score 0 for leaves
 		if(this.children.size() == 0){
 			readCounts();
+			System.err.println("dir "+dir+" done");
 			return;
 		}
 		// maximal counts of children nodes
@@ -93,7 +94,7 @@ public class BottomUp {
 				scores.get(dclass).put(new Integer(i), minScore(dclass,i));
 			}
 		}
-
+		System.err.println("dir "+dir+" done");
 	}
 
 	private Integer minScore(String dclass, Integer i) {
