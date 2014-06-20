@@ -21,22 +21,28 @@ public class MPCounts {
 	 * @param args
 	 */
 	public static void main(String[] args) {
-		if(args.length > 2 || (args.length == 2 && !args[0].equals("-n"))){
-			System.err.println("USAGE: java -jar mpcounts.jar -n <directory of tree root>");
+		if(args.length > 2 || (args.length == 2 && !args[0].equals("-n") && !args.equals("-c"))){
+			System.err.println("USAGE: java -jar mpcounts.jar [-n|c] <directory of tree root>");
 			System.exit(0);
 		}
 		
 	
 		String fileroot = args[0];
 		boolean norm = false;
+		boolean cooc = false;
 		if(fileroot.equals("-n")){
 			norm = true;
+			fileroot = args[1];
+		}else if(fileroot.equals("-c")){
+			cooc = true;
 			fileroot = args[1];
 		}
 
 		if(!norm){
 			System.out.print("Starting calculations of the scores (bottom up step)...");
-			BottomUp root = new BottomUp(fileroot);
+			BottomUp root; 
+			if(cooc)root = new BottomUp(fileroot,cooc);
+			else root = new BottomUp(fileroot);
 			root.buildTree();
 			root.calcScores();
 			System.out.println("done");

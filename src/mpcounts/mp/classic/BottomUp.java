@@ -27,7 +27,23 @@ public class BottomUp {
 		this.children = new ArrayList<BottomUp>();
 		this.scores = new TreeMap< String, TreeMap<Integer,Integer> >();
 	}	
-
+	
+	/**
+	 * @param dir
+	 */
+	public BottomUp(String dir,boolean cooc) {
+		this.dir = dir;
+		this.children = new ArrayList<BottomUp>();
+		this.scores = new TreeMap< String, TreeMap<Integer,Integer> >();
+		List<String> old = dclasses;
+		this.dclasses = Arrays.asList();
+		for(String dc1 : old){
+			for(String dc2 : old){
+				this.dclasses.add(dc1+"_"+dc2);
+			}
+		}
+	}
+	
 	public void buildTree() {
 		// read directory and create BottomUp object for each directory
 		File directory = new File(this.dir);
