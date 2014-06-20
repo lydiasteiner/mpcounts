@@ -21,7 +21,9 @@ public class MPCounts {
 	 * @param args
 	 */
 	public static void main(String[] args) {
-		if(args.length > 2 || (args.length == 2 && !args[0].equals("-n") && !args.equals("-c"))){
+		if(args.length > 2 || (args.length == 2 && !args[0].equals("-n") && !args[0].equals("-c"))){
+			
+			for(String t : args)System.err.println(t);
 			System.err.println("USAGE: java -jar mpcounts.jar [-n|c] <directory of tree root>");
 			System.exit(0);
 		}
@@ -48,7 +50,7 @@ public class MPCounts {
 			System.out.println("done");
 			System.out.print("Selecting best score (top down step)...");
 			TreeMap<String,Integer> fakeParent = new TreeMap<String,Integer>();
-			for(String dclass :  BottomUp.getDclasses()){
+			for(String dclass :  root.getDclasses()){
 				TreeMap<Integer,Integer> scores = root.getScores().get(dclass);
 				Integer minScore = -1; 
 				Integer minCount = -1;

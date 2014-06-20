@@ -8,6 +8,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.TreeMap;
 
@@ -17,29 +18,38 @@ public class BottomUp {
 	private String dir;
 	private TreeMap< String, TreeMap<Integer,Integer> > scores;
 	private ArrayList<BottomUp> children;
-	private static List<String> dclasses =	Arrays.asList("Wac","Wme","Wph","Wub","Eac","Eme","Eub","Rac","Rme","Rph");
+	private ArrayList<String> dclasses;
+	private boolean cooc = false;
 
 	/**
 	 * @param dir
 	 */
 	public BottomUp(String dir) {
+		//System.err.println(dir+" without cooc");
 		this.dir = dir;
 		this.children = new ArrayList<BottomUp>();
 		this.scores = new TreeMap< String, TreeMap<Integer,Integer> >();
+		this.dclasses = new ArrayList<String>(Arrays.asList("Wac","Wme","Wph","Wub","Eac","Eme","Eub","Rac","Rme","Rph"));
 	}	
 	
 	/**
 	 * @param dir
 	 */
 	public BottomUp(String dir,boolean cooc) {
+		this.cooc = cooc;
 		this.dir = dir;
 		this.children = new ArrayList<BottomUp>();
 		this.scores = new TreeMap< String, TreeMap<Integer,Integer> >();
-		List<String> old = dclasses;
-		this.dclasses = Arrays.asList();
-		for(String dc1 : old){
-			for(String dc2 : old){
-				this.dclasses.add(dc1+"_"+dc2);
+		ArrayList<String> old  = new ArrayList<String>(Arrays.asList("Wac","Wme","Wph","Wub","Eac","Eme","Eub","Rac","Rme","Rph"));
+		Collections.sort(old);
+		this.dclasses = new ArrayList<String> ();
+		for(int i = 0; i < old.size(); i++){
+			String dc1 = old.get(i);
+			for(int j = i; j < old.size(); j++){
+				String dc2 = old.get(j);
+				String comb = dc1+"_"+dc2;
+				//System.err.println(dc1+" "+dc2+" "+comb);
+				this.dclasses.add(comb);
 			}
 		}
 	}
@@ -52,7 +62,10 @@ public class BottomUp {
 			for (int i = 0; i < files.length; i++) {
 				if(files[i].getName().startsWith(".")){continue;}//skip hidden files
 				if (files[i].isDirectory()) {
-					BottomUp c = new BottomUp(files[i].getAbsolutePath());
+					BottomUp c;
+					if(cooc)c = new BottomUp(files[i].getAbsolutePath(),cooc);
+					else c = new BottomUp(files[i].getAbsolutePath());
+			
 					children.add(c);
 				}
 			}
@@ -63,6 +76,9 @@ public class BottomUp {
 	}
 	
 	public void calcScores(){
+		System.err.println("dir "+dir);
+		//for(String dc : this.getDclasses())System.err.print(dc+"|");
+		//System.err.println("");
 		// get real counts with score 0 for leaves
 		if(this.children.size() == 0){
 			readCounts();
@@ -72,6 +88,7 @@ public class BottomUp {
 		TreeMap<String, Integer> max = getMax();
 		for(String dclass : max.keySet()){
 			scores.put(dclass, new TreeMap<Integer,Integer>());
+			System.err.println(dclass+"\t"+max.get(dclass));
 			for(Integer i = 0; i <= max.get(dclass); i++){
 				scores.get(dclass).put(new Integer(i), minScore(dclass,i));
 			}
@@ -97,7 +114,8 @@ public class BottomUp {
 		TreeMap<String,Integer> max = new TreeMap<String,Integer>();
 		for(BottomUp child : children){
 			TreeMap<String, TreeMap<Integer,Integer> > childmap = child.getScores(); 
-			for(String dclass : BottomUp.getDclasses()){
+			for(String dclass : this.getDclasses()){
+				//System.err.println(dir+"\t"+dclass);
 				Integer childMax = childmap.get(dclass).navigableKeySet().last();
 				if(!max.containsKey(dclass) || max.get(dclass) < childMax){
 					max.put(dclass, childMax);
@@ -121,12 +139,12 @@ public class BottomUp {
 				System.err.println("Could not read from mpcounts for leave node defined by directory: "+dir);
 				System.exit(0);
 			}
-			String line = r.readLine();
+//			String line = r.readLine();
 			while(r.ready()){
-				line = r.readLine();
+				String line = r.readLine();
 				String[] cols = line.split("\t");
 				String dclass = cols[0];
-				if(BottomUp.getDclasses().contains(dclass)){
+				if(this.getDclasses().contains(dclass)){
 					Integer count = new Integer(cols[1]);
 					scores.put(dclass, new TreeMap<Integer,Integer>());
 					scores.get(dclass).put(count, new Integer(0));
@@ -151,7 +169,7 @@ public class BottomUp {
 		return children;
 	}
 
-	public static List<String>  getDclasses() {
+	public List<String>  getDclasses() {
 		return dclasses;
 	}
 

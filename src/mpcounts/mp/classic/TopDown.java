@@ -17,7 +17,7 @@ public class TopDown {
 	
 	public void selectCounts(TreeMap<String,Integer> parent){
 		if(bt.getChildren().size() == 0)return;
-		for(String dclass :  BottomUp.getDclasses()){
+		for(String dclass :  bt.getDclasses()){
 			TreeMap<Integer,Integer> scores = bt.getScores().get(dclass);
 			Integer minScore = -1;
 			Integer minCount = -1;
@@ -47,7 +47,7 @@ public class TopDown {
 		try {
 			PrintWriter pw = new PrintWriter(filename);
 			pw.println("class\testimated.counts");
-			for(String dclass : BottomUp.getDclasses()){
+			for(String dclass : bt.getDclasses()){
 				pw.println(dclass+"\t"+counts.get(dclass));
 			}
 			pw.close();
